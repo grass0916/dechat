@@ -1,0 +1,1 @@
+node --harmony_destructuring ./server/app.js
