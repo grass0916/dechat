@@ -1,0 +1,135 @@
+script(type='text/babel').
+	// Some defined attributes.
+	const TEXT_LENGTH_LIMIT = 1024;
+	// Component of the room.
+	var Room = React.createClass({
+		// Initial default data.
+		getInitialState: function () {
+			return {
+				roomid: this.props.roomid
+			};
+		},
+
+		render: function () {
+			return (
+				<div id={'room-' + this.state.roomid} className='ui segments'>
+					<div className='ui secondary segment'>
+						<h2 className='ui header'>
+							<i className='icon comments outline' />
+							<div className='content'>
+								{this.state.roomid}
+								<div className='sub header'>xxx users online</div>
+							</div>
+						</h2>
+					</div>
+					<Conversation roomid={this.state.roomid} />
+				</div>
+			);
+		}
+	});
+
+	// The component of the message area.
+	var Conversation = React.createClass({
+		// Initial default data.
+		getInitialState: function () {
+			return {
+				roomid: this.props.roomid,
+				status: 'prepare',
+				text: '',
+				messages: []
+			};
+		},
+
+		// Start query the messages of conversation.
+		componentDidMount: function () {
+			let url = '/rooms/' + this.state.roomid + '/conversations';
+			this.serverRequest = $.get(url, (result) => {
+				this.setState({
+					messages: result.messages,
+					status: 'ready'
+				});
+				// Animate of scrolling to bottom.
+				$('.conversation').animate({ scrollTop: $('.conversation').prop('scrollHeight')}, 0);
+			}.bind(this));
+		},
+
+		// Unmount this component.
+		componentWillUnmount: function() {
+			this.serverRequest.abort();
+		},
+
+		// Update the input - 'text'.
+		handleTextChange: function (e) {
+			this.setState({ text: e.target.value });
+		},
+
+		// When the form submit.
+		handleSubmit: function (e) {
+			e.preventDefault();
+			let data = { text: this.state.text.trim() };
+			this.setState({ text: '' });
+			// AJAX post action.
+			let url = '/rooms/' + this.state.roomid + '/message';
+			this.serverRequest = $.post(url, data, (result) => {
+				let { messages } = result;
+				let updatedData = { messages: messages };
+				this.setState(updatedData);
+				// Animate of scrolling to bottom.
+				$('.conversation').stop().animate({ scrollTop: $('.conversation').prop('scrollHeight')}, 1000);
+			}.bind(this));
+		},
+
+		render: function () {
+			return (
+				<div className={'ui segment' + (this.state.status === 'prepare' ? ' loading' : '')}>
+					<div className='conversation'>
+						{this.state.messages.map((message, i) => <Message message={message} />)}
+					</div>
+					<div className='ui divider' />
+					<form className='commentForm' onSubmit={this.handleSubmit}>
+						<div className={'ui fluid action input' + (this.state.text.length > TEXT_LENGTH_LIMIT ? ' error': '')}>
+							<img id='thumbnail' className='ui mini rounded image' src='https://www.gravatar.com/avatar/8ff55430b7b2d3e2d1b091363f7c2748' />
+							<input
+								type='text'
+								placeholder='Say something...'
+								value={this.state.text}
+								onChange={this.handleTextChange}
+							/>
+							<button
+								type='submit'
+								className={'ui button' + (this.state.text.length > TEXT_LENGTH_LIMIT ? ' red': ' blue')}
+								disabled={(! this.state.text || this.state.text.length > TEXT_LENGTH_LIMIT)}
+							>
+							Send
+							</button>
+						</div>
+					</form>
+				</div>
+			);
+		}
+	});
+	var Message = React.createClass({
+		render: function () {
+			return (
+				<div id={'message-' + this.props.message.id} className='ui comments'>
+					<div className='comment'>
+						<a className='avatar'>
+							<img src='https://www.gravatar.com/avatar/8ff55430b7b2d3e2d1b091363f7c2748' />
+						</a>
+						<div className='content'>
+							<a className='author'>{this.props.message.user.name}</a>
+							<div className='metadata'>
+								<div className='date'>{this.props.message.timestamp}</div>
+							</div>
+							<div className='text'>{this.props.message.text}</div>
+						</div>
+					</div>
+				</div>
+			);
+		}
+	});
+
+	ReactDOM.render(
+		<Room roomid='#{roomid}'/>, // '#{xxx}' is pug syntax.
+		document.getElementById('chat-room')
+	);

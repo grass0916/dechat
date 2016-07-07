@@ -1,24 +1,28 @@
 
-// GET: '/'
-// 進入大廳
-enterLobby
+* GET: '/'
 
-// POST: '/rooms'
-// 取得目前的聊天室列表
-getRooms
+> enterLobby: 進入大廳
 
-// GET: '/rooms/<id>'
-// 進入聊天室
-enterRoom
+* GET: '/rooms'
 
-// GET: '/rooms/<id>/message'
-// 發送訊息至當前聊天室
-sendMessage
+getRooms: 取得目前的聊天室列表
 
-// POST '/rooms/<id>/conversations'
-// 取得目前聊天室的最新 N 筆對話
-getConversations
+* GET: '/rooms/<id>'
 
-// POST '/rooms/<id>/conversations/<b>to<a>'
-// 取得目前聊天室的 b 到 a 筆對話
-getPastConversations
+enterRoom: 進入聊天室
+
+* GET: '/rooms/<id>/info'
+
+getRoomInfo: 取得目前聊天室的資訊
+
+* POST: '/rooms/<id>/message'
+
+sendMessage: 發送訊息至當前聊天室
+
+* GET '/rooms/<id>/conversations'
+
+getConversations: 取得目前聊天室的最新 N 筆對話
+
+* GET '/rooms/<id>/conversations/<b>to<a>'
+
+getPastConversations: 取得目前聊天室的 b 到 a 筆對話
