@@ -42,7 +42,7 @@ script(type='text/babel').
 
 		// Start query the messages of conversation.
 		componentDidMount: function () {
-			let url = '/rooms/' + this.state.roomid + '/conversations';
+			let url = '/api/rooms/' + this.state.roomid + '/conversations';
 			this.serverRequest = $.get(url, (result) => {
 				this.setState({
 					messages: result.messages,
@@ -63,13 +63,28 @@ script(type='text/babel').
 			this.setState({ text: e.target.value });
 		},
 
+		// Update the input - 'mail'.
+		handleEmailChange: function (e) {
+			this.setState({ mail: e.target.value });
+		},
+
+		// Update the input - 'nickname'.
+		handleNicknameChange: function (e) {
+			this.setState({ nickname: e.target.value });
+		},
+
 		// When the form submit.
 		handleSubmit: function (e) {
 			e.preventDefault();
-			let data = { text: this.state.text.trim() };
+			// Store the data and clean it in same time.
+			let data = {
+				text:     this.state.text.trim(),
+				mail:     this.state.mail.trim(),
+				nickname: this.state.nickname.trim()
+			};
 			this.setState({ text: '' });
 			// AJAX post action.
-			let url = '/rooms/' + this.state.roomid + '/message';
+			let url = '/api/rooms/' + this.state.roomid + '/message';
 			this.serverRequest = $.post(url, data, (result) => {
 				let { messages } = result;
 				let updatedData = { messages: messages };
@@ -103,6 +118,20 @@ script(type='text/babel').
 							Send
 							</button>
 						</div>
+						<div className={'ui fluid action input' + (this.state.text.length > TEXT_LENGTH_LIMIT ? ' error': '')}>
+							<input
+								type='text'
+								placeholder='Email'
+								value={this.state.mail}
+								onChange={this.handleEmailChange}
+							/>
+							<input
+								type='text'
+								placeholder='Nickname'
+								value={this.state.nickname}
+								onChange={this.handleNicknameChange}
+							/>
+						</div>
 					</form>
 				</div>
 			);
@@ -133,3 +162,13 @@ script(type='text/babel').
 		<Room roomid='#{roomid}'/>, // '#{xxx}' is pug syntax.
 		document.getElementById('chat-room')
 	);
+
+	var socket = io(window.location.host);
+	socket.on('news', function (data) {
+		let currentStatus = {
+			roomid: '#{roomid}',
+			userid: '12333', 
+			lastMessage: ''
+		};
+		socket.emit('refreshMessages', currentStatus);
+	});

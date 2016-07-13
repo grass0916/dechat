@@ -44,34 +44,63 @@ exports.enterRoom = function* enterRoom() {
 
 // POST: Send a message to current chat room.
 exports.sendMessage = function* sendMessage() {
-	const { roomid, text } = _.extend(this.params, this.request.body);
-	if (! text || text.length > 1024) {
+	const { roomid, text, mail, nickname } = _.extend(this.params, this.request.body);
+	// Check the form format.
+	if ((roomid === undefined   || ! roomid.length) ||
+		(text === undefined     || ! text.length > 1024) ||
+		(mail === undefined     || ! mail.length) ||
+		(nickname === undefined || ! nickname.length)) {
 		return;
 	}
 
-	let message = { id: 4, user: { id: 1, name: '鮭魚' }, text: text, timestamp: moment().format()};
-	mmm.push(message);
+	messages.push(
+{
+		id: 0,
+		roomid: roomid,
+		user: { id: mail, name: nickname },
+		text: text,
+		timestamp: moment().format('hh:mm:ss MM-DD-YYYY')
+	}
+
+
+		);
 	let json = {
-		messages: mmm
+		messages: _.filter(messages, (messages) => { return messages.roomid === roomid; })
 	};
 	this.type = 'application/json';
 	this.body = json;
 };
 
-let mmm = [{ id: 1, user: { id: 1, name: '鮭魚' }, text: 'Testing', timestamp: '2016/07/07'}, 
-			{ id: 2, user: { id: 1, name: '鮭魚' }, text: 'Testing2', timestamp: '2016/07/07'}, 
-			{ id: 3, user: { id: 2, name: '鯉魚王' }, text: 'Testing3', timestamp: '2016/07/07'}];
+let messages = [];
 
 // GET: Get the lastest conversions of current chat room.
 exports.getConversations = function* getConversations() {
+	const { roomid } = _.extend(this.params, this.request.body);
 	let json = {
-		messages: mmm
+		messages: _.filter(messages, (messages) => { return messages.roomid === roomid; })
 	};
 	this.type = 'application/json';
 	this.body = json;
 };
+
+// GET: Get the lastest message in specific room.
+exports.getLastestMessage = function* getLastestMessage(options) {
+	const { roomid } = _.extend(this.params, this.request.body, options);
+	let messages = _.filter(messages, (messages) => { return messages.roomid === roomid; });
+	return ;
+}
 
 // GET: Get the past conversions of current chat room.
 exports.getPastConversations = function* getPastConversations() {
 
 };
+
+class Message {
+	constructor(roomid, userId, text) {
+		this.id        = 0;
+		this.roomid    = roomid;
+		this.userId    = userId;
+		this.text      = text;
+		this.timestamp = moment().format('hh:mm:ss MM-DD-YYYY');
+	}
+}

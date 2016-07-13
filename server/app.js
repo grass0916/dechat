@@ -6,10 +6,12 @@
 
 // Native libraries below..
 const fs         = require('fs');
+const http       = require('http')
 // 3rd-party libraries below.
 const app        = require('koa')();
 const staticPath = require('koa-static');
 const bodyParser = require('koa-body');
+const io         = require('socket.io');
 
 /* =============================================
                  Web application
@@ -26,9 +28,16 @@ app
 	.use(bodyParser())
 	// Set routes.
 	.use(router.routes())
-	.use(router.allowedMethods())
-	// Start listening.
-	.listen(8080);
+	.use(router.allowedMethods());
+
+// Enable the websocket via socket.io.
+let server   = http.Server(app.callback());
+let ioSocket = io.listen(server);
+
+ioSocket.sockets.on('connection', router.websockets);
+
+// Enable the web server (koa & socket.io).
+server.listen(8080);
 
 console.log('Web server is running.');
 
